@@ -1,6 +1,4 @@
-# Updating app.py with requested restructuring for onboarding and recipe display layout
-
-updated_code = '''# app.py
+# app.py
 import streamlit as st
 from random import seed, sample, choice
 
@@ -60,17 +58,17 @@ def generate_plan():
 
 
 def onboarding():
-    """信息录入首页：基础信息 & 方案制定"""
-    st.title("备孕食谱制作软件 设置")
+    """Onboarding：收集用户信息和偏好"""
+    st.header("欢迎使用备孕食谱制作软件")
     col1, col2 = st.columns(2)
+
     with col1:
         st.subheader("基础信息")
         name = st.text_input("姓名")
-        height_cm = st.number_input("身高 (cm)", min_value=100.0, max_value=220.0, value=165.0)
-        weight_kg = st.number_input("体重 (kg)", min_value=30.0, max_value=200.0, value=55.0)
-        body_fat = st.number_input("体脂率 (%)", min_value=0.0, max_value=60.0, value=22.0)
-        age = st.number_input("年龄", min_value=18, max_value=60, value=28)
-        # 自动计算 BMI
+        height_cm = st.number_input("身高 (cm)", 100.0, 220.0, 165.0)
+        weight_kg = st.number_input("体重 (kg)", 30.0, 200.0, 55.0)
+        body_fat = st.number_input("体脂率 (%)", 0.0, 60.0, 22.0)
+        age = st.number_input("年龄", 18, 60, 28)
         bmi = round(weight_kg / ((height_cm / 100) ** 2), 1) if height_cm > 0 else None
         st.write(f"**BMI**: {bmi}")
 
@@ -83,19 +81,18 @@ def onboarding():
             "自身免疫病", "贫血", "血液高凝", "线粒体功能障碍", "糖尿病",
             "糖前期", "内异症", "腺肌症", "多囊", "雌孕激素失衡", "更年期"
         ])
-        goal = st.text_input("饮食目标 (例如：控制血糖、增肌减脂)")
-        intolerances = st.multiselect("食物不耐受（中度/重度需剔除）",
+        goal = st.text_input("饮食目标 (如：控糖、增肌减脂)")
+        intolerances = st.multiselect("食物不耐受（中/重度需剔除）",
                                        ["乳糖", "麸质", "坚果", "海鲜"])
         template = st.selectbox("餐盘模板", list(TEMPLATE_DEFAULTS.keys()))
         custom = st.checkbox("自定义餐盘配比")
         template_cfg = {}
         if custom:
-            st.subheader("自定义餐盘配比(%)")
+            st.subheader("自定义配比(%)")
             for comp, default in TEMPLATE_DEFAULTS[template].items():
                 template_cfg[comp] = st.slider(comp, 0, 100, default)
 
     if st.button("生成食谱"):
-        # 初始化会话状态
         st.session_state.update({
             "onboarded": True,
             "user": {"name": name, "age": age},
@@ -112,76 +109,10 @@ def onboarding():
             "plan": generate_plan(),
             "day_idx": 0
         })
-        st.success("设置完成！前往食谱页面查看。")
+        st.success("设置完成！请刷新页面查看食谱。")
         st.stop()
 
 
 def dashboard():
-    """食谱展示页面"""
-    # 箭头切换天数
-    if 'day_idx' not in st.session_state:
-        st.session_state.day_idx = 0
-    col_prev, col_title, col_next = st.columns([1, 6, 1])
-    with col_prev:
-        if st.button("←"):
-            st.session_state.day_idx = (st.session_state.day_idx - 1) % 7
-            st.stop()
-    with col_title:
-        st.markdown(f"## 第 {st.session_state.day_idx + 1} 天 食谱")
-    with col_next:
-        if st.button("→"):
-            st.session_state.day_idx = (st.session_state.day_idx + 1) % 7
-            st.stop()
-
-    # 当天三餐
-    daily = st.session_state.plan[st.session_state.day_idx]
-    for meal in ["早餐", "午餐", "晚餐"]:
-        m = daily[meal]
-        st.subheader(f"{meal} | {m['time']}")
-        left, right = st.columns([3, 1])
-        with left:
-            st.write("**主食**:", m["staple"])
-            st.write("**菜品**:")
-            for d in m["dishes"]:
-                st.write(f"- {d}")
-            st.write("**饮料**:", m["beverage"])
-            if st.button(f"为{meal} 添加加餐", key=f"snack_{meal}_{st.session_state.day_idx}"):
-                snack = choice([s["name"] for s in SNACK_MODULES])
-                m["snacks"].append(snack)
-                st.stop()
-            if m["snacks"]:
-                st.write("**加餐**:")
-                for s in m["snacks"]:
-                    st.write(f"- {s}")
-        with right:
-            # 简易营养汇总示例
-            energy = len(m["dishes"])*150 + 100
-            protein = len(m["dishes"])*10
-            carbs = len(m["dishes"])*15
-            fat = len(m["dishes"])*5
-            st.write("**热量**")
-            st.write(f"{energy} kcal")
-            st.write("**蛋白**")
-            st.write(f"{protein} g")
-            st.write("**碳水**")
-            st.write(f"{carbs} g")
-            st.write("**脂肪**")
-            st.write(f"{fat} g")
-        st.markdown("---")
-
-
-if __name__ == "__main__":
-    if "onboarded" not in st.session_state:
-        st.session_state.onboarded = False
-    if not st.session_state.onboarded:
-        onboarding()
-    else:
-        dashboard()
-'''
-
-# write to app.py
-with open('/mnt/data/app.py', 'w', encoding='utf-8') as f:
-    f.write(updated_code)
-
-# print for user
-print(updated_code)
+    """食谱展示页面：左右布局显示食物与营养，箭头切换天数"""
+    if 'day_id_
