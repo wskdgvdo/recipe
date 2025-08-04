@@ -29,8 +29,7 @@ TEMPLATE_DEFAULTS = {
 # 饮食模式列表
 DIET_PATTERNS = [
     "抗炎饮食", "地中海饮食", "DASH", "低升糖饮食", "低碳水化合物饮食",
-    "TLC饮食", "MIND饮食", "低FODMAP饮食", "全素/植物性饮食",
-    "古饮食(Paleo)", "肾脏保护饮食"
+    "TLC饮食", "MIND饮食", "低FODMAP饮食", "全素/植物性饮食", "古饮食(Paleo)", "肾脏保护饮食"
 ]
 
 # 用餐时间
@@ -58,7 +57,7 @@ def generate_plan():
 
 
 def onboarding():
-    """信息录入首页：基础信息 & 方案制定"""
+    """首页：基础信息 & 方案制定"""
     st.header("欢迎使用备孕食谱制作软件")
     col1, col2 = st.columns(2)
 
@@ -109,12 +108,11 @@ def onboarding():
             "plan": generate_plan(),
             "day_idx": 0
         })
-        # 自动跳转到展示页面
         st.experimental_rerun()
 
 
 def dashboard():
-    """食谱展示页面：左右布局显示食物与营养，箭头切换天数"""
+    """食谱展示：左右布局显示食物 & 营养，箭头切换天数"""
     if "day_idx" not in st.session_state:
         st.session_state.day_idx = 0
 
@@ -124,21 +122,4 @@ def dashboard():
             st.session_state.day_idx = (st.session_state.day_idx - 1) % 7
             st.experimental_rerun()
     with col_title:
-        st.markdown(f"## 第 {st.session_state.day_idx + 1} 天")
-    with col_next:
-        if st.button("→"):
-            st.session_state.day_idx = (st.session_state.day_idx + 1) % 7
-            st.experimental_rerun()
-
-    daily = st.session_state.plan[st.session_state.day_idx]
-    for meal in ["早餐", "午餐", "晚餐"]:
-        m = daily[meal]
-        st.subheader(f"{meal} | {m['time']}")
-        left, right = st.columns([3, 1])
-        with left:
-            st.write("**主食**:", m["staple"])
-            st.write("**菜品**:")
-            for d in m["dishes"]:
-                st.write(f"- {d}")
-            st.write("**饮料**:", m["beverage"])
-            if st.button(f"为{meal} 添加加餐", k
+        st.markdown(f"## 第 {s
