@@ -114,5 +114,9 @@ def onboarding():
 
 
 def dashboard():
-    """食谱展示页面：左右布局显示食物与营养，箭头切换天数"""
-    if 'day_id_
+    """食谱展示页面"""
+    # 箭头切换天数
+    if 'day_idx' not in st.session_state:
+        st.session_state.day_idx = 0
+    col_prev, col_title, col_next = st.columns([1, 6, 1])
+
