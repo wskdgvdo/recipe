@@ -53,14 +53,16 @@ def onboarding():
             "选择餐盘模板", ["4:3:3 餐盘", "2:1:1 餐盘", "地中海餐盘", "四分餐盘"]
         )
         submitted = st.form_submit_button("提交并生成食谱")
-    if submitted:
-        st.session_state.onboarded = True
-        st.session_state.user = {"name": name, "age": age}
-        st.session_state.tags = tags
-        st.session_state.intolerances = intolerances
-        st.session_state.template = template
-        st.session_state.plan = generate_plan()
-        st.experimental_rerun()
+         if submitted:
+         st.session_state.onboarded = True
+         st.session_state.user = {"name": name, "age": age}
+         st.session_state.tags = tags
+         st.session_state.intolerances = intolerances
+         st.session_state.template = template
+-        st.experimental_rerun()
++        st.success("✅ 设置完成！请手动刷新页面 (F5) 查看食谱计划。")
++        st.stop()
+
 
 # Dashboard 页面
 def dashboard():
@@ -113,4 +115,5 @@ if __name__ == '__main__':
         onboarding()
     else:
         dashboard()
+
 
