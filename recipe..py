@@ -62,6 +62,9 @@ def onboarding():
     with st.form("onboarding_form"):
         name = st.text_input("姓名")
         age = st.number_input("年龄", min_value=18, max_value=60, value=30)
+        height_cm = st.number_input("身高 (cm)", min_value=100.0, max_value=220.0, value=170.0)
+        weight_kg = st.number_input("体重 (kg)", min_value=30.0, max_value=200.0, value=60.0)
+        body_fat = st.number_input("体脂率 (%)", min_value=0.0, max_value=60.0, value=20.0)
         diet_modes = st.multiselect("选择饮食模式", DIET_PATTERNS)
         tags = st.multiselect(
             "健康标签",
@@ -85,72 +88,94 @@ def onboarding():
         submitted = st.form_submit_button("生成 7 天食谱")
 
     if submitted:
-        st.session_state.onboarded = True
-        st.session_state.user = {"name": name, "age": age}
-        st.session_state.diet_modes = diet_modes
-        st.session_state.tags = tags
-        st.session_state.intolerances = intolerances
-        st.session_state.template = template
-        st.session_state.template_cfg = template_cfg or TEMPLATE_DEFAULTS[template]
-        st.session_state.plan = generate_plan()
-        # 初始化 day index
-        st.session_state.day_idx = 0
+        # 计算 BMI
+        bmi = round(weight_kg / ((height_cm / 100) ** 2), 1)
+        st.session_state.update({
+            "onboarded": True,
+            "user": {"name": name, "age": age},
+            "height_cm": height_cm,
+            "weight_kg": weight_kg,
+            "body_fat": body_fat,
+            "bmi": bmi,
+            "diet_modes": diet_modes,
+            "tags": tags,
+            "intolerances": intolerances,
+            "template": template,
+            "template_cfg": template_cfg or TEMPLATE_DEFAULTS[template],
+            "plan": generate_plan(),
+            "day_idx": 0
+        })
         st.success("✅ 设置完成！请刷新页面查看食谱。")
         st.stop()
 
 
 def dashboard():
-    """Dashboard：展示三餐及加餐，使用左右箭头切换天数"""
-    # 侧栏设置与重置
-    st.sidebar.title("用户设置")
-    u = st.session_state.user
-    st.sidebar.write(f"用户：{u['name']}，{u['age']} 岁")
-    st.sidebar.write("饮食模式：" + (", ".join(st.session_state.diet_modes) or "无"))
-    st.sidebar.write("餐盘配比：")
-    for comp, pct in st.session_state.template_cfg.items():
-        st.sidebar.write(f"{comp}: {pct}%")
+    """Dashboard：展示基础信息、方案信息及三餐，加餐和左右切换"""
+    # 基础信息卡片
+    st.subheader("基础信息")
+    st.markdown(f"""
+- **姓名**: {st.session_state.user['name']}
+- **身高**: {st.session_state.height_cm} cm
+- **体重**: {st.session_state.weight_kg} kg
+- **BMI**: {st.session_state.bmi}
+- **体脂率**: {st.session_state.body_fat}%
+""")
+    st.markdown("---")
+
+    # 方案信息卡片
+    st.subheader("方案制定信息")
+    st.markdown(f"""
+- **饮食模式**: {', '.join(st.session_state.diet_modes) or '无'}
+- **健康标签**: {', '.join(st.session_state.tags) or '无'}
+- **食物不耐受**: {', '.join(st.session_state.intolerances) or '无'}
+- **餐盘模板**: {st.session_state.template}
+""")
+    st.markdown("---")
+
+    # 重置按钮
     if st.sidebar.button("重置 & 重新设置"):
         for k in [
-            "onboarded", "user", "diet_modes", "tags",
-            "intolerances", "template", "template_cfg", "plan", "day_idx"
+            "onboarded", "user", "height_cm", "weight_kg", "body_fat",
+            "bmi", "diet_modes", "tags", "intolerances", "template",
+            "template_cfg", "plan", "day_idx"
         ]:
             st.session_state.pop(k, None)
-        st.experimental_rerun()
+        st.stop()
 
-    # 箭头切换
+    # 左右箭头切换天数
     if 'day_idx' not in st.session_state:
         st.session_state.day_idx = 0
     col_prev, col_title, col_next = st.columns([1, 6, 1])
     with col_prev:
         if st.button("←"):
             st.session_state.day_idx = (st.session_state.day_idx - 1) % 7
-            st.experimental_rerun()
+            st.stop()
     with col_title:
         st.markdown(f"### 第 {st.session_state.day_idx + 1} 天")
     with col_next:
         if st.button("→"):
             st.session_state.day_idx = (st.session_state.day_idx + 1) % 7
-            st.experimental_rerun()
+            st.stop()
 
-    # 展示三餐
+    # 展示三餐及加餐
     daily = st.session_state.plan[st.session_state.day_idx]
     for meal in ["早餐", "午餐", "晚餐"]:
         m = daily[meal]
         st.subheader(f"{meal} | {m['time']}")
-        st.write("**主食：**", m["staple"])
-        st.write("**菜品：**")
+        st.write("**主食**:", m["staple"])
+        st.write("**菜品**:")
         for d in m["dishes"]:
             st.write(f"- {d}")
-        st.write("**饮料：**", m["beverage"])
-        st.markdown("---")
+        st.write("**饮料**:", m["beverage"])
         if st.button(f"为{meal} 添加加餐", key=f"snack_{meal}_{st.session_state.day_idx}"):
             snack = choice([s["name"] for s in SNACK_MODULES])
             m["snacks"].append(snack)
-            st.experimental_rerun()
+            st.stop()
         if m["snacks"]:
-            st.write("**加餐：**")
+            st.write("**加餐**:")
             for s in m["snacks"]:
                 st.write(f"- {s}")
+        st.markdown("---")
 
 
 if __name__ == "__main__":
