@@ -40,7 +40,7 @@ MEAL_TIMES = {"早餐": "07:00", "午餐": "12:00", "晚餐": "18:00"}
 def generate_plan():
     """生成 7 天三餐计划，每餐含 3 道菜、1 主食、1 饮料"""
     plan = []
-    for day in range(1, 8):
+    for _ in range(7):
         daily = {}
         for meal in ["早餐", "午餐", "晚餐"]:
             dishes = sample(DISH_MODULES, k=3)
@@ -58,7 +58,7 @@ def generate_plan():
 
 
 def onboarding():
-    """Onboarding：收集用户信息和偏好"""
+    """信息录入首页：基础信息 & 方案制定"""
     st.header("欢迎使用备孕食谱制作软件")
     col1, col2 = st.columns(2)
 
@@ -88,7 +88,7 @@ def onboarding():
         custom = st.checkbox("自定义餐盘配比")
         template_cfg = {}
         if custom:
-            st.subheader("自定义配比(%)")
+            st.subheader("自定义餐盘配比(%)")
             for comp, default in TEMPLATE_DEFAULTS[template].items():
                 template_cfg[comp] = st.slider(comp, 0, 100, default)
 
@@ -109,8 +109,8 @@ def onboarding():
             "plan": generate_plan(),
             "day_idx": 0
         })
-        st.success("设置完成！请刷新页面查看食谱。")
-        st.stop()
+        # 自动跳转到展示页面
+        st.experimental_rerun()
 
 
 def dashboard():
@@ -122,13 +122,13 @@ def dashboard():
     with col_prev:
         if st.button("←"):
             st.session_state.day_idx = (st.session_state.day_idx - 1) % 7
-            st.stop()
+            st.experimental_rerun()
     with col_title:
         st.markdown(f"## 第 {st.session_state.day_idx + 1} 天")
     with col_next:
         if st.button("→"):
             st.session_state.day_idx = (st.session_state.day_idx + 1) % 7
-            st.stop()
+            st.experimental_rerun()
 
     daily = st.session_state.plan[st.session_state.day_idx]
     for meal in ["早餐", "午餐", "晚餐"]:
@@ -141,31 +141,4 @@ def dashboard():
             for d in m["dishes"]:
                 st.write(f"- {d}")
             st.write("**饮料**:", m["beverage"])
-            if st.button(f"为{meal} 添加加餐", key=f"snack_{meal}_{st.session_state.day_idx}"):
-                snack = choice([s["name"] for s in SNACK_MODULES])
-                m["snacks"].append(snack)
-                st.stop()
-            if m["snacks"]:
-                st.write("**加餐**:")
-                for s in m["snacks"]:
-                    st.write(f"- {s}")
-        with right:
-            # 简易营养统计
-            energy = len(m["dishes"]) * 150 + 100
-            protein = len(m["dishes"]) * 10
-            carbs = len(m["dishes"]) * 15
-            fat = len(m["dishes"]) * 5
-            st.write("**热量**", f"{energy} kcal")
-            st.write("**蛋白**", f"{protein} g")
-            st.write("**碳水**", f"{carbs} g")
-            st.write("**脂肪**", f"{fat} g")
-        st.markdown("---")
-
-
-if __name__ == "__main__":
-    if "onboarded" not in st.session_state:
-        st.session_state.onboarded = False
-    if not st.session_state.onboarded:
-        onboarding()
-    else:
-        dashboard()
+            if st.button(f"为{meal} 添加加餐", k
