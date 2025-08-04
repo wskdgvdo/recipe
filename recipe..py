@@ -114,9 +114,58 @@ def onboarding():
 
 
 def dashboard():
-    """食谱展示页面"""
-    # 箭头切换天数
-    if 'day_idx' not in st.session_state:
+    """食谱展示页面：左右布局显示食物与营养，箭头切换天数"""
+    if "day_idx" not in st.session_state:
         st.session_state.day_idx = 0
-    col_prev, col_title, col_next = st.columns([1, 6, 1])
 
+    col_prev, col_title, col_next = st.columns([1, 6, 1])
+    with col_prev:
+        if st.button("←"):
+            st.session_state.day_idx = (st.session_state.day_idx - 1) % 7
+            st.stop()
+    with col_title:
+        st.markdown(f"## 第 {st.session_state.day_idx + 1} 天")
+    with col_next:
+        if st.button("→"):
+            st.session_state.day_idx = (st.session_state.day_idx + 1) % 7
+            st.stop()
+
+    daily = st.session_state.plan[st.session_state.day_idx]
+    for meal in ["早餐", "午餐", "晚餐"]:
+        m = daily[meal]
+        st.subheader(f"{meal} | {m['time']}")
+        left, right = st.columns([3, 1])
+        with left:
+            st.write("**主食**:", m["staple"])
+            st.write("**菜品**:")
+            for d in m["dishes"]:
+                st.write(f"- {d}")
+            st.write("**饮料**:", m["beverage"])
+            if st.button(f"为{meal} 添加加餐", key=f"snack_{meal}_{st.session_state.day_idx}"):
+                snack = choice([s["name"] for s in SNACK_MODULES])
+                m["snacks"].append(snack)
+                st.stop()
+            if m["snacks"]:
+                st.write("**加餐**:")
+                for s in m["snacks"]:
+                    st.write(f"- {s}")
+        with right:
+            # 简易营养统计
+            energy = len(m["dishes"]) * 150 + 100
+            protein = len(m["dishes"]) * 10
+            carbs = len(m["dishes"]) * 15
+            fat = len(m["dishes"]) * 5
+            st.write("**热量**", f"{energy} kcal")
+            st.write("**蛋白**", f"{protein} g")
+            st.write("**碳水**", f"{carbs} g")
+            st.write("**脂肪**", f"{fat} g")
+        st.markdown("---")
+
+
+if __name__ == "__main__":
+    if "onboarded" not in st.session_state:
+        st.session_state.onboarded = False
+    if not st.session_state.onboarded:
+        onboarding()
+    else:
+        dashboard()
