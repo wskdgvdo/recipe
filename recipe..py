@@ -36,15 +36,18 @@ def generate_plan():
 # Onboarding 表单
 def onboarding():
     st.header("欢迎使用备孕食谱制作软件")
+    # 表单开始，缩进为 4 空格
     with st.form("onboarding_form"):
         name = st.text_input("姓名")
         age = st.number_input("年龄", min_value=18, max_value=60, value=30)
         tags = st.multiselect(
             "健康标签",
-            ["超重/肥胖", "肌少症", "认知减退", "桥本氏甲状腺炎", "甲亢", "甲减",
-             "血脂异常", "胰岛素抵抗", "肝功能异常", "肾功能不全", "慢性炎症",
-             "自身免疫病", "贫血", "血液高凝", "线粒体功能障碍", "糖尿病",
-             "糖前期", "内异症", "腺肌症", "多囊", "雌孕激素失衡", "更年期"]
+            [
+                "超重/肥胖", "肌少症", "认知减退", "桥本氏甲状腺炎", "甲亢", "甲减",
+                "血脂异常", "胰岛素抵抗", "肝功能异常", "肾功能不全", "慢性炎症",
+                "自身免疫病", "贫血", "血液高凝", "线粒体功能障碍", "糖尿病",
+                "糖前期", "内异症", "腺肌症", "多囊", "雌孕激素失衡", "更年期"
+            ]
         )
         intolerances = st.multiselect(
             "食物不耐受（中度/重度将被剔除）", ["乳糖", "麸质", "坚果", "海鲜"]
@@ -53,15 +56,17 @@ def onboarding():
             "选择餐盘模板", ["4:3:3 餐盘", "2:1:1 餐盘", "地中海餐盘", "四分餐盘"]
         )
         submitted = st.form_submit_button("提交并生成食谱")
-         if submitted:
-         st.session_state.onboarded = True
-         st.session_state.user = {"name": name, "age": age}
-         st.session_state.tags = tags
-         st.session_state.intolerances = intolerances
-         st.session_state.template = template
--        st.experimental_rerun()
-+        st.success("✅ 设置完成！请手动刷新页面 (F5) 查看食谱计划。")
-+        st.stop()
+
+    # 这里 if 与 with 保持同一级缩进
+    if submitted:
+        st.session_state.onboarded = True
+        st.session_state.user = {"name": name, "age": age}
+        st.session_state.tags = tags
+        st.session_state.intolerances = intolerances
+        st.session_state.template = template
+        # 提示并停止，以便刷新后显示 dashboard
+        st.success("✅ 设置完成！请刷新页面 (F5) 查看食谱计划。")
+        st.stop()
 
 
 # Dashboard 页面
@@ -115,5 +120,6 @@ if __name__ == '__main__':
         onboarding()
     else:
         dashboard()
+
 
 
