@@ -97,7 +97,10 @@ def dashboard():
     if st.button("添加加餐"):
         snack = st.selectbox("选择零食", SNACK_MODULES, format_func=lambda x: x['name'])
         st.session_state.plan[day-1]['snacks'].append(snack)
+         try:
         st.experimental_rerun()
+    except AttributeError:
+        st.stop()
     if st.session_state.plan[day-1]['snacks']:
         for s in st.session_state.plan[day-1]['snacks']:
             st.write(f"- {s['name']}，{s['energy']} kcal")
@@ -110,3 +113,4 @@ if __name__ == '__main__':
         onboarding()
     else:
         dashboard()
+
