@@ -1,133 +1,149 @@
 # app.py
 import streamlit as st
-from random import seed
+from random import seed, sample, choice
 
+# 保证随机结果可复现
 seed(42)
 
-# 样例餐品模块
-MEAL_MODULES = [
-    {"id": "meal1", "name": "三文鱼藜麦沙拉", "ingredients": ["三文鱼", "藜麦", "菠菜", "橄榄油"],
-     "recipe": "将三文鱼煎熟，与煮熟的藜麦和菠菜拌匀，淋上橄榄油", "nutrition": {"热量": 350, "蛋白": 25, "碳水": 30, "脂肪": 15}},
-    {"id": "meal2", "name": "鸡胸肉西兰花", "ingredients": ["鸡胸肉", "西兰花", "蒜", "少许橄榄油"],
-     "recipe": "鸡胸肉清蒸后切片，与焯水西兰花和蒜炒匀", "nutrition": {"热量": 300, "蛋白": 30, "碳水": 10, "脂肪": 12}},
-    {"id": "meal3", "name": "牛油果全麦三明治", "ingredients": ["全麦面包", "牛油果", "番茄", "生菜"],
-     "recipe": "将牛油果捣碎，涂抹于全麦面包，夹入番茄和生菜", "nutrition": {"热量": 400, "蛋白": 15, "碳水": 45, "脂肪": 18}},
-    {"id": "meal4", "name": "扁豆南瓜汤", "ingredients": ["扁豆", "南瓜", "洋葱", "橄榄油"],
-     "recipe": "所有材料煮熟后搅拌成浓汤", "nutrition": {"热量": 250, "蛋白": 12, "碳水": 35, "脂肪": 8}},
-    {"id": "meal5", "name": "牛肉藜麦碗", "ingredients": ["瘦牛肉", "藜麦", "彩椒", "洋葱"],
-     "recipe": "牛肉炒熟与藜麦和彩椒洋葱同碗", "nutrition": {"热量": 380, "蛋白": 28, "碳水": 32, "脂肪": 14}},
-    {"id": "meal6", "name": "豆腐鸡腿菇煲", "ingredients": ["豆腐", "鸡腿菇", "胡萝卜", "生抽"],
-     "recipe": "所有材料炖煮20分钟", "nutrition": {"热量": 270, "蛋白": 18, "碳水": 25, "脂肪": 10}}
+# 样例菜品、主食和饮料模块
+DISH_MODULES = [
+    "三文鱼烤蔬菜", "蒜蓉西兰花", "红烧豆腐", "清炒菠菜", "麻婆茄子",
+    "香菇油菜", "土豆炖牛肉", "清蒸鸡腿", "椒盐虾", "蒜香菌菇"
+]
+STAPLE_MODULES = ["糙米饭", "全麦面包", "玉米粥", "红薯", "藜麦饭"]
+BEVERAGE_MODULES = ["白开水", "柠檬水", "无糖豆浆", "绿茶", "淡咖啡"]
+SNACK_MODULES = [
+    {"name": "希腊酸奶坚果杯"},
+    {"name": "燕麦香蕉能量球"},
+    {"name": "水果沙拉杯"}
 ]
 
-SNACK_MODULES = [
-    {"id": "snack1", "name": "希腊酸奶坚果杯", "energy": 150},
-    {"id": "snack2", "name": "燕麦香蕉能量球", "energy": 120},
-    {"id": "snack3", "name": "水果沙拉杯", "energy": 100}
+# 经典餐盘模板及默认配比
+TEMPLATE_DEFAULTS = {
+    "4:3:3 餐盘": {"碳水化合物": 40, "蛋白质": 30, "脂肪": 30},
+    "2:1:1 餐盘": {"蔬菜": 50, "蛋白质": 25, "碳水化合物": 25},
+    "地中海餐盘": {"蔬菜": 50, "全谷": 20, "鱼禽蛋白": 15, "健康脂肪": 15},
+    "四分餐盘": {"蔬菜": 25, "水果": 25, "全谷": 25, "蛋白": 25}
+}
+
+# 经典饮食模式列表
+DIET_PATTERNS = [
+    "抗炎饮食", "地中海饮食", "DASH", "低升糖饮食", "低碳水化合物饮食",
+    "TLC饮食", "MIND饮食", "低FODMAP饮食", "全素/植物性饮食",
+    "古饮食(Paleo)", "肾脏保护饮食"
 ]
+
+# 用餐时间配置
+MEAL_TIMES = {"早餐": "07:00", "午餐": "12:00", "晚餐": "18:00"}
 
 
 def generate_plan():
-    """生成默认 7 天食谱计划"""
+    """生成 7 天三餐计划，每餐含 3 道菜、1 主食、1 饮料"""
     plan = []
     for day in range(1, 8):
-        idx = (day - 1) * 3
-        meals = [
-            MEAL_MODULES[idx % len(MEAL_MODULES)],
-            MEAL_MODULES[(idx + 1) % len(MEAL_MODULES)],
-            MEAL_MODULES[(idx + 2) % len(MEAL_MODULES)]
-        ]
-        plan.append({"day": day, "meals": meals, "snacks": []})
+        daily = {}
+        for meal in ["早餐", "午餐", "晚餐"]:
+            dishes = sample(DISH_MODULES, k=3)
+            staple = choice(STAPLE_MODULES)
+            beverage = choice(BEVERAGE_MODULES)
+            daily[meal] = {
+                "time": MEAL_TIMES[meal],
+                "dishes": dishes,
+                "staple": staple,
+                "beverage": beverage,
+                "snacks": []
+            }
+        plan.append(daily)
     return plan
 
 
 def onboarding():
-    """用户 Onboarding 表单"""
+    """Onboarding：收集用户信息和偏好"""
     st.header("欢迎使用备孕食谱制作软件")
-
     with st.form("onboarding_form"):
         name = st.text_input("姓名")
         age = st.number_input("年龄", min_value=18, max_value=60, value=30)
+        diet_modes = st.multiselect("选择饮食模式", DIET_PATTERNS)
         tags = st.multiselect(
             "健康标签",
-            ["超重/肥胖", "肌少症", "认知减退", "桥本氏甲状腺炎", "甲亢", "甲减",
-             "血脂异常", "胰岛素抵抗", "肝功能异常", "肾功能不全", "慢性炎症",
-             "自身免疫病", "贫血", "血液高凝", "线粒体功能障碍", "糖尿病",
-             "糖前期", "内异症", "腺肌症", "多囊", "雌孕激素失衡", "更年期"]
+            [
+                "超重/肥胖", "肌少症", "认知减退", "桥本氏甲状腺炎", "甲亢", "甲减",
+                "血脂异常", "胰岛素抵抗", "肝功能异常", "肾功能不全", "慢性炎症",
+                "自身免疫病", "贫血", "血液高凝", "线粒体功能障碍", "糖尿病",
+                "糖前期", "内异症", "腺肌症", "多囊", "雌孕激素失衡", "更年期"
+            ]
         )
         intolerances = st.multiselect(
-            "食物不耐受（中度/重度将被剔除）", ["乳糖", "麸质", "坚果", "海鲜"]
+            "食物不耐受（中度/重度需剔除）", ["乳糖", "麸质", "坚果", "海鲜"]
         )
-        template = st.selectbox(
-            "选择餐盘模板", ["4:3:3 餐盘", "2:1:1 餐盘", "地中海餐盘", "四分餐盘"]
-        )
-        submitted = st.form_submit_button("提交并生成食谱")
+        template = st.selectbox("选择餐盘模板", list(TEMPLATE_DEFAULTS.keys()))
+        custom = st.checkbox("自定义餐盘配比")
+        template_cfg = {}
+        if custom:
+            st.subheader("自定义餐盘配比(%)")
+            for comp, default in TEMPLATE_DEFAULTS[template].items():
+                template_cfg[comp] = st.slider(comp, 0, 100, default)
+        submitted = st.form_submit_button("生成 7 天食谱")
 
     if submitted:
         st.session_state.onboarded = True
         st.session_state.user = {"name": name, "age": age}
+        st.session_state.diet_modes = diet_modes
         st.session_state.tags = tags
         st.session_state.intolerances = intolerances
         st.session_state.template = template
-        st.success("✅ 设置完成！请刷新页面 (F5) 查看食谱计划。")
+        st.session_state.template_cfg = template_cfg or TEMPLATE_DEFAULTS[template]
+        st.session_state.plan = generate_plan()
+        st.success("✅ 设置完成！请刷新页面查看食谱。")
         st.stop()
 
 
 def dashboard():
-    """主界面：展示每日三餐与加餐"""
-    st.sidebar.title("设置")
-    user = st.session_state.user
-    st.sidebar.write(f"用户：{user['name']}，年龄：{user['age']}")
+    """Dashboard：展示三餐及加餐"""
+    st.sidebar.title("用户设置")
+    u = st.session_state.user
+    st.sidebar.write(f"用户：{u['name']}，{u['age']} 岁")
+    st.sidebar.write("饮食模式：" + (", ".join(st.session_state.diet_modes) or "无"))
+    st.sidebar.write("餐盘配比：")
+    for comp, pct in st.session_state.template_cfg.items():
+        st.sidebar.write(f"{comp}: {pct}%")
 
     if st.sidebar.button("重置 & 重新设置"):
-        for key in ['onboarded', 'user', 'tags', 'intolerances', 'template', 'plan']:
-            st.session_state.pop(key, None)
+        for k in [
+            "onboarded", "user", "diet_modes", "tags",
+            "intolerances", "template", "template_cfg", "plan"
+        ]:
+            st.session_state.pop(k, None)
         st.experimental_rerun()
 
-    # 选择查看哪一天
-    day = st.sidebar.slider("选择天数", 1, 7, 1)
-    st.sidebar.write("已选模板：", st.session_state.template)
+    day = st.sidebar.select_slider("选择天数", options=list(range(1, 8)))
+    st.header(f"第 {day} 天 食谱计划")
+    daily = st.session_state.plan[day - 1]
 
-    st.title(f"第 {day} 天 食谱计划")
-    cols = st.columns(3)
-    meal_labels = ["早餐", "午餐", "晚餐"]
+    for meal in ["早餐", "午餐", "晚餐"]:
+        m = daily[meal]
+        st.subheader(f"{meal} | {m['time']}")
+        st.write("**主食：**", m["staple"])
+        st.write("**菜品：**")
+        for d in m["dishes"]:
+            st.write(f"- {d}")
+        st.write("**饮料：**", m["beverage"])
+        st.markdown("---")
 
-    for i, col in enumerate(cols):
-        meal = st.session_state.plan[day - 1]['meals'][i]
-        with col:
-            st.subheader(meal_labels[i])
-            with st.expander(meal['name']):
-                st.write("**食材**")
-                for ing in meal['ingredients']:
-                    if ing in st.session_state.intolerances:
-                        st.markdown(f"- **<span style='color:red'>{ing}</span>**", unsafe_allow_html=True)
-                    else:
-                        st.write(f"- {ing}")
-                st.write("**做法：**", meal['recipe'])
-                st.write("**营养（kcal / g）：**", meal['nutrition'])
-
-    st.markdown("---")
-    st.subheader("加餐")
-
-    if st.button("添加加餐"):
-        snack = st.selectbox("选择零食", SNACK_MODULES, format_func=lambda x: x['name'])
-        st.session_state.plan[day - 1]['snacks'].append(snack)
-        st.experimental_rerun()
-
-    # 展示已添加的加餐
-    snacks = st.session_state.plan[day - 1]['snacks']
-    for s in snacks:
-        st.write(f"- {s['name']}，{s['energy']} kcal")
+        if st.button(f"为{meal} 添加加餐", key=f"snack_{meal}_{day}"):
+            snack = choice([s["name"] for s in SNACK_MODULES])
+            m["snacks"].append(snack)
+            st.experimental_rerun()
+        if m["snacks"]:
+            st.write("**加餐：**")
+            for s in m["snacks"]:
+                st.write(f"- {s}")
 
 
-if __name__ == '__main__':
-    if 'onboarded' not in st.session_state:
+if __name__ == "__main__":
+    if "onboarded" not in st.session_state:
         st.session_state.onboarded = False
-
     if not st.session_state.onboarded:
         onboarding()
     else:
-        # 首次生成 plan
-        if 'plan' not in st.session_state:
-            st.session_state.plan = generate_plan()
         dashboard()
