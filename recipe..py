@@ -29,7 +29,8 @@ TEMPLATE_DEFAULTS = {
 # 饮食模式列表
 DIET_PATTERNS = [
     "抗炎饮食", "地中海饮食", "DASH", "低升糖饮食", "低碳水化合物饮食",
-    "TLC饮食", "MIND饮食", "低FODMAP饮食", "全素/植物性饮食", "古饮食(Paleo)", "肾脏保护饮食"
+    "TLC饮食", "MIND饮食", "低FODMAP饮食", "全素/植物性饮食",
+    "古饮食(Paleo)", "肾脏保护饮食"
 ]
 
 # 用餐时间
@@ -108,7 +109,7 @@ def onboarding():
             "plan": generate_plan(),
             "day_idx": 0
         })
-        st.success("设置完成！请刷新页面查看食谱。")
+        st.success("设置完成！请继续操作。")
         st.stop()
 
 
@@ -117,17 +118,18 @@ def dashboard():
     if "day_idx" not in st.session_state:
         st.session_state.day_idx = 0
 
-    col_prev, col_title, col_next = st.columns([1, 6, 1])
-    with col_prev:
+    # 导航箭头
+    prev_col, title_col, next_col = st.columns([1, 6, 1])
+    with prev_col:
         if st.button("←"):
             st.session_state.day_idx = (st.session_state.day_idx - 1) % 7
-            st.experimental_rerun()
-    with col_title:
+            st.stop()
+    with title_col:
         st.markdown(f"## 第 {st.session_state.day_idx + 1} 天")
-    with col_next:
+    with next_col:
         if st.button("→"):
             st.session_state.day_idx = (st.session_state.day_idx + 1) % 7
-            st.experimental_rerun()
+            st.stop()
 
     daily = st.session_state.plan[st.session_state.day_idx]
     for meal in ["早餐", "午餐", "晚餐"]:
@@ -143,11 +145,11 @@ def dashboard():
             if st.button(f"为{meal} 添加加餐", key=f"snack_{meal}_{st.session_state.day_idx}"):
                 snack = choice([s["name"] for s in SNACK_MODULES])
                 m["snacks"].append(snack)
-                st.experimental_rerun()
+                st.stop()
             if m["snacks"]:
                 st.write("**加餐**:")
-                for s in m["snacks"]:
-                    st.write(f"- {s}")
+                for s_ in m["snacks"]:
+                    st.write(f"- {s_}")
         with right:
             energy = len(m["dishes"]) * 150 + 100
             protein = len(m["dishes"]) * 10
@@ -169,6 +171,7 @@ def dashboard():
 if __name__ == "__main__":
     if "onboarded" not in st.session_state:
         st.session_state.onboarded = False
+
     if not st.session_state.onboarded:
         onboarding()
     else:
