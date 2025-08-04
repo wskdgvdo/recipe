@@ -29,8 +29,7 @@ TEMPLATE_DEFAULTS = {
 # 饮食模式列表
 DIET_PATTERNS = [
     "抗炎饮食", "地中海饮食", "DASH", "低升糖饮食", "低碳水化合物饮食",
-    "TLC饮食", "MIND饮食", "低FODMAP饮食", "全素/植物性饮食",
-    "古饮食(Paleo)", "肾脏保护饮食"
+    "TLC饮食", "MIND饮食", "低FODMAP饮食", "全素/植物性饮食", "古饮食(Paleo)", "肾脏保护饮食"
 ]
 
 # 用餐时间
@@ -109,11 +108,12 @@ def onboarding():
             "plan": generate_plan(),
             "day_idx": 0
         })
-        st.experimental_rerun()
+        st.success("设置完成！请刷新页面查看食谱。")
+        st.stop()
 
 
 def dashboard():
-    """食谱展示：左右布局显示食物与营养，箭头切换天数"""
+    """食谱展示：左右布局显示食物 & 营养，箭头切换天数"""
     if "day_idx" not in st.session_state:
         st.session_state.day_idx = 0
 
@@ -146,8 +146,8 @@ def dashboard():
                 st.experimental_rerun()
             if m["snacks"]:
                 st.write("**加餐**:")
-                for s_ in m["snacks"]:
-                    st.write(f"- {s_}")
+                for s in m["snacks"]:
+                    st.write(f"- {s}")
         with right:
             energy = len(m["dishes"]) * 150 + 100
             protein = len(m["dishes"]) * 10
