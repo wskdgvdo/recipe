@@ -29,7 +29,8 @@ TEMPLATE_DEFAULTS = {
 # 饮食模式列表
 DIET_PATTERNS = [
     "抗炎饮食", "地中海饮食", "DASH", "低升糖饮食", "低碳水化合物饮食",
-    "TLC饮食", "MIND饮食", "低FODMAP饮食", "全素/植物性饮食", "古饮食(Paleo)", "肾脏保护饮食"
+    "TLC饮食", "MIND饮食", "低FODMAP饮食", "全素/植物性饮食",
+    "古饮食(Paleo)", "肾脏保护饮食"
 ]
 
 # 用餐时间
@@ -112,7 +113,7 @@ def onboarding():
 
 
 def dashboard():
-    """食谱展示：左右布局显示食物 & 营养，箭头切换天数"""
+    """食谱展示：左右布局显示食物与营养，箭头切换天数"""
     if "day_idx" not in st.session_state:
         st.session_state.day_idx = 0
 
@@ -122,4 +123,53 @@ def dashboard():
             st.session_state.day_idx = (st.session_state.day_idx - 1) % 7
             st.experimental_rerun()
     with col_title:
-        st.markdown(f"## 第 {s
+        st.markdown(f"## 第 {st.session_state.day_idx + 1} 天")
+    with col_next:
+        if st.button("→"):
+            st.session_state.day_idx = (st.session_state.day_idx + 1) % 7
+            st.experimental_rerun()
+
+    daily = st.session_state.plan[st.session_state.day_idx]
+    for meal in ["早餐", "午餐", "晚餐"]:
+        m = daily[meal]
+        st.subheader(f"{meal} | {m['time']}")
+        left, right = st.columns([3, 1])
+        with left:
+            st.write("**主食**:", m["staple"])
+            st.write("**菜品**:")
+            for d in m["dishes"]:
+                st.write(f"- {d}")
+            st.write("**饮料**:", m["beverage"])
+            if st.button(f"为{meal} 添加加餐", key=f"snack_{meal}_{st.session_state.day_idx}"):
+                snack = choice([s["name"] for s in SNACK_MODULES])
+                m["snacks"].append(snack)
+                st.experimental_rerun()
+            if m["snacks"]:
+                st.write("**加餐**:")
+                for s_ in m["snacks"]:
+                    st.write(f"- {s_}")
+        with right:
+            energy = len(m["dishes"]) * 150 + 100
+            protein = len(m["dishes"]) * 10
+            carbs = len(m["dishes"]) * 15
+            fat = len(m["dishes"]) * 5
+            fiber = len(m["dishes"]) * 2
+            sodium = len(m["dishes"]) * 300
+            sugar = len(m["dishes"]) * 5
+            st.write("**热量**", f"{energy} kcal")
+            st.write("**蛋白质**", f"{protein} g")
+            st.write("**碳水化合物**", f"{carbs} g")
+            st.write("**脂肪**", f"{fat} g")
+            st.write("**膳食纤维**", f"{fiber} g")
+            st.write("**钠**", f"{sodium} mg")
+            st.write("**糖**", f"{sugar} g")
+        st.markdown("---")
+
+
+if __name__ == "__main__":
+    if "onboarded" not in st.session_state:
+        st.session_state.onboarded = False
+    if not st.session_state.onboarded:
+        onboarding()
+    else:
+        dashboard()
