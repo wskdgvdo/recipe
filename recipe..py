@@ -29,8 +29,7 @@ TEMPLATE_DEFAULTS = {
 # 经典饮食模式列表
 DIET_PATTERNS = [
     "抗炎饮食", "地中海饮食", "DASH", "低升糖饮食", "低碳水化合物饮食",
-    "TLC饮食", "MIND饮食", "低FODMAP饮食", "全素/植物性饮食",
-    "古饮食(Paleo)", "肾脏保护饮食"
+    "TLC饮食", "MIND饮食", "低FODMAP饮食", "全素/植物性饮食", "古饮食(Paleo)", "肾脏保护饮食"
 ]
 
 # 用餐时间配置
@@ -94,12 +93,15 @@ def onboarding():
         st.session_state.template = template
         st.session_state.template_cfg = template_cfg or TEMPLATE_DEFAULTS[template]
         st.session_state.plan = generate_plan()
+        # 初始化 day index
+        st.session_state.day_idx = 0
         st.success("✅ 设置完成！请刷新页面查看食谱。")
         st.stop()
 
 
 def dashboard():
-    """Dashboard：展示三餐及加餐"""
+    """Dashboard：展示三餐及加餐，使用左右箭头切换天数"""
+    # 侧栏设置与重置
     st.sidebar.title("用户设置")
     u = st.session_state.user
     st.sidebar.write(f"用户：{u['name']}，{u['age']} 岁")
@@ -107,19 +109,31 @@ def dashboard():
     st.sidebar.write("餐盘配比：")
     for comp, pct in st.session_state.template_cfg.items():
         st.sidebar.write(f"{comp}: {pct}%")
-
     if st.sidebar.button("重置 & 重新设置"):
         for k in [
             "onboarded", "user", "diet_modes", "tags",
-            "intolerances", "template", "template_cfg", "plan"
+            "intolerances", "template", "template_cfg", "plan", "day_idx"
         ]:
             st.session_state.pop(k, None)
         st.experimental_rerun()
 
-    day = st.sidebar.select_slider("选择天数", options=list(range(1, 8)))
-    st.header(f"第 {day} 天 食谱计划")
-    daily = st.session_state.plan[day - 1]
+    # 箭头切换
+    if 'day_idx' not in st.session_state:
+        st.session_state.day_idx = 0
+    col_prev, col_title, col_next = st.columns([1, 6, 1])
+    with col_prev:
+        if st.button("←"):
+            st.session_state.day_idx = (st.session_state.day_idx - 1) % 7
+            st.experimental_rerun()
+    with col_title:
+        st.markdown(f"### 第 {st.session_state.day_idx + 1} 天")
+    with col_next:
+        if st.button("→"):
+            st.session_state.day_idx = (st.session_state.day_idx + 1) % 7
+            st.experimental_rerun()
 
+    # 展示三餐
+    daily = st.session_state.plan[st.session_state.day_idx]
     for meal in ["早餐", "午餐", "晚餐"]:
         m = daily[meal]
         st.subheader(f"{meal} | {m['time']}")
@@ -129,8 +143,7 @@ def dashboard():
             st.write(f"- {d}")
         st.write("**饮料：**", m["beverage"])
         st.markdown("---")
-
-        if st.button(f"为{meal} 添加加餐", key=f"snack_{meal}_{day}"):
+        if st.button(f"为{meal} 添加加餐", key=f"snack_{meal}_{st.session_state.day_idx}"):
             snack = choice([s["name"] for s in SNACK_MODULES])
             m["snacks"].append(snack)
             st.experimental_rerun()
